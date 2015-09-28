@@ -101,18 +101,134 @@ public class TreesAndGraphs {
 	}
 
 	public boolean isBST(TreeNode root) {
+		return isBST(root, null, null);
+	}
+
+	public boolean isBST(TreeNode root, int max, int min) {
 		if (root == null) {
 			return true;
-		} else {
-			boolean leftLess = true;
-			boolean rightMore = true;
-			if (root.left != null) {
-				leftLess = root.left.data <= root.data;
-			}
-			if (root.right != null) {
-				rightMore = root.right.data > root.data;
-			}
-			return leftLess && rightMore && isBST(root.left) && isBST(root.right)
 		}
+		if ((min != null && n.data <= min) || (max != null && n.data > max)) {
+			return false;
+		}
+		if (!checkBST(n.left, min, n.data) || !checkBST(n.right, n.data, max)) {
+			return false;
+		}
+		return true; 
+	}
+
+	public TreeNode nextNode(TreeNode n) {
+		if (n == null) return null;
+
+		if (n.right != null) {
+			return leftmostChild(n.right);
+		}
+		TreeNode p = n.parent;
+		while (p != null && p.left != n) {
+			n = p;
+			p = p.parent;
+		}
+		return p;
+	}
+
+	public TreeNode leftmostChild(TreeNode n) {
+		if (n == null) {
+			return null;
+		}
+		while (n.left != null) {
+			n = n.left;
+		}
+		return n;
+	}
+
+	// If we have links to parents and can mark nodes visited
+	public TreeNode commonAncestor(TreeNode n1, TreeNode n2) {
+		n1.visited = true;
+		n2.visited = true;
+		while (n1.parent != null && n2.parent != null) {
+			if (n1.parent != null) {
+				if (n1.parent.visited) {
+					return n1.parent;
+				} else {
+					n1 = n1.parent;
+					n1.visited = true;
+				}
+			}
+			if (n2.parent != null) {
+				if (n2.parent.visited) {
+					return n2.parent;
+				} else {
+					n2 = n2.parent;
+					n2.visited = true;
+				}
+			}
+		}
+		return null;
+	}
+
+	// If we don't have links to parents
+	public boolean covers(TreeNode root, TreeNode n) {
+		if (root == null) return false;
+		if (root == n) {
+			return true;
+		}
+		return covers(root.left, n) || covers(root.right, n);
+	}
+
+	public TreeNode commonAncestorHelper(TreeNode root, TreeNode n1, TreeNode n2) {
+		if (root == null) return null;
+		if (root == p || root == q) return root;
+		boolean n1_on_left = covers(root.left, n1);
+		boolean n2_on_left = covers(root.left, n2);
+		if (n1_on_left != n2_on_left) { // n1 and n2 on different sides
+			return root;
+		}
+		TreeNode child_side = n1_on_left ? root.left : root.right;
+		return commonAncestorHelper(child_side, n1, n2);
+	}
+
+	public TreeNode commonAncestor(TreeNode root, TreeNode n1, TreeNode n2) {
+		if (!covers(root, n1) || !covers(root, n2)) {
+			return null;
+		}
+		return commonAncestorHelper(root, n1, n2);
+	}
+
+	public void findSum(TreeNode node, int sum, int[] path, int level) {
+		if (node == null) {
+			return;
+		}
+		path[level] = node.data;
+		int t = 0;
+		for (int i = level; i >= 0; i--) {
+			t += path[i];
+			if (t == sum) {
+				print(path, i, level);
+				break;
+			}
+		}
+		findSum(node.left, sum, path, level+1);
+		findSum(node.right, sum, path, level+1);
+		path[level] = Integer.MIN_VALUE;
+	}
+
+	public void findSum(TreeNode node, int sum) {
+		int depth = findDepth(node);
+		int[] path = new int[depth];
+		findSum(node, sum, path, 0);
+	}
+
+	public void print(int[] path, int start, int end) {
+		for (int i = start; i <= end; i++) {
+			System.out.print(path[i] + " ");
+		}
+		System.out.println();
+	}
+
+	public int findDepth(TreeNode node) {
+		if (node == null) {
+			return 0;
+		}
+		return 1 + Math.max(findDepth(node.right), findDepth(node.left));
 	}
 }
